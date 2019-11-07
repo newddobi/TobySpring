@@ -15,19 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)//스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장 기능 지정
-@ContextConfiguration(locations = "/applicationContext.xml")//테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
 public class UserDaoTest {
-
-	//테스트 오브젝트가 만들어지고 나면 스프링 테스트 컨텍스트에 의해 자동으로 값이 주입된다.
-	@Autowired
-	private ApplicationContext context;
 	
-	@Autowired
-	private UserDao dao;
+	private UserDao dao; //@Autowired가 없다
 	
 	private User user1;
 	private User user2;
@@ -41,14 +35,12 @@ public class UserDaoTest {
 	@Before
 	public void setUp() {
 		
-//		this.dao = context.getBean("userDao", UserDao.class);
-		
 		this.user1 = new User("gyumee", "박성철", "springno1");
 		this.user2 = new User("leegw700", "이길원", "springno2");
 		this.user3 = new User("bumjin", "박범진", "springno3");
-
-		DataSource dataSource = new SingleConnectionDataSource(
-				"jdbc:mysql://localhost/springbook?characterEncoding=UTF-8&amp;serverTimezone=UTC", "root", "system", true);
+		
+		dao = new UserDao();
+		DataSource dataSource = new SingleConnectionDataSource("jdbc:mysql://localhost/testdb?characterEncoding=UTF-8&serverTimezone=UTC", "root", "system", true);
 		
 		dao.setConnectionMaker(dataSource);
 		
