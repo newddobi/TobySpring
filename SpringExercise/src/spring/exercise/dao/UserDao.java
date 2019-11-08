@@ -5,21 +5,27 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.sql.DataSource;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 
 public class UserDao {
-
 	DataSource dataSource;
+	private JdbcContext jdbcContext;
 	
-	public void setConnectionMaker(DataSource connectionMaker) {
+	public void setDataSource(DataSource connectionMaker) {
 		this.dataSource = connectionMaker;
 	}
 
+	public void setJdbcContext(JdbcContext jdbcContext) {
+		this.jdbcContext = jdbcContext;
+	}
+
 	public void add(final User user) throws ClassNotFoundException, SQLException {
-		jdbcContextWithStatementStrategy(
+		this.jdbcContext.workWithStatementStrategy(
 			new StatementStrategy() {
 				public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
 					PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
@@ -61,8 +67,14 @@ public class UserDao {
 	}
 	
 	public void deleteAll() throws SQLException {
-		StatementStrategy st = new DeleteAllStatement();
-		jdbcContextWithStatementStrategy(st);
+		this.jdbcContext.workWithStatementStrategy(
+				new StatementStrategy() {
+					public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+						PreparedStatement ps = c.prepareStatement("delete from users");
+						return ps;
+					}
+				}
+		);
 	}
 	
 	public int getCount() throws SQLException {
@@ -87,22 +99,50 @@ public class UserDao {
 		}
 	}
 	
-	public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
+	public void remove(final User user) throws SQLException {
+		this.jdbcContext.workWithStatementStrategy(
+				new StatementStrategy() {
+					public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+						PreparedStatement ps = c.prepareStatement("DELETE FROM users WHERE id = (?)");
+						ps.setString(1, user.getId());
+						
+						return ps;
+					}
+				}
+		);
+	}
+	
+	
+	public List<User> selectAll() throws SQLException {
 		Connection c = null;
-		PreparedStatement ps = null;
+		PreparedStatement ps =  null;
+		ResultSet rs = null;
+		List<User> listUser = new ArrayList<User>();
 		
 		try {
 			c = dataSource.getConnection();
 			
-			ps = stmt.makePreparedStatement(c);
+			ps = c.prepareStatement("SELECT * FROM users");
 			
-			ps.execute();
-		} catch (Exception e) {
-			throw e;
-		}finally {
-			if(ps != null) { try { ps.close(); } catch (SQLException e) {} }
-			if (c != null) { try { c.close(); } catch (SQLException e) {} }
+			rs = ps.executeQuery();
 			
+			User user = null;
+			while(rs.next()) {
+				user = new User();
+				user.setId(rs.getString("id"));
+				user.setName(rs.getString("name"));
+				user.setPassword(rs.getString("password"));
+				listUser.add(user);
+			}
+			
+			return listUser;
+			
+		} catch (SQLException e) { 
+			throw e; 
+		} finally { 
+			if (rs != null) { try { rs.close(); } catch (SQLException e) { } }
+			if (ps != null) { try { ps.close(); } catch (SQLException e) { } }
+			if (c != null) { try { c.close(); } catch (SQLException e) { } } 
 		}
 	}
 }

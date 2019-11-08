@@ -11,14 +11,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+@RunWith(SpringJUnit4ClassRunner.class) //스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장 기능 지정
+@ContextConfiguration(locations = "/test-applicationContext.xml") //테스트 컨텍스트가 자동으
 public class UserDaoTest {
 	
 	private UserDao dao; //@Autowired가 없다
@@ -42,7 +41,7 @@ public class UserDaoTest {
 		dao = new UserDao();
 		DataSource dataSource = new SingleConnectionDataSource("jdbc:mysql://localhost/testdb?characterEncoding=UTF-8&serverTimezone=UTC", "root", "system", true);
 		
-		dao.setConnectionMaker(dataSource);
+		dao.setDataSource(dataSource);
 		
 	}
 
@@ -93,4 +92,37 @@ public class UserDaoTest {
 		dao.get("unknown_id");
 		
 	}
+	
+	@Test
+	public void selectAll() throws SQLException, ClassNotFoundException {
+		
+		dao.deleteAll();
+		assertThat(dao.getCount(), is(0));
+		
+		dao.add(user1);
+		assertThat(dao.getCount(), is(1));
+		
+		dao.add(user2);
+		assertThat(dao.getCount(), is(2));
+		
+		dao.add(user3);
+		assertThat(dao.getCount(), is(3));
+		
+		assertThat(dao.selectAll().size(), is(3));
+		
+	}
+	
+//	@Test
+//	public void remove() throws SQLException, ClassNotFoundException {
+//		
+//		dao.deleteAll();
+//		assertThat(dao.getCount(), is(0));
+//		
+//		dao.add(user1);
+//		assertThat(dao.getCount(), is(1));
+//		
+//		dao.remove(user1);
+//		assertThat(dao.getCount(), is(0));
+//		
+//	}
 }
