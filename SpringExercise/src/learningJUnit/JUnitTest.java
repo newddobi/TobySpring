@@ -1,4 +1,4 @@
-package spring.exercise.dao;
+package learningJUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
