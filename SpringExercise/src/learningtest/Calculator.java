@@ -5,24 +5,34 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class Calculator {
-	public Integer calcSum(String filepath) throws IOException{
-		LineCallback sumCallback =
-			new LineCallback() {
-				public Integer doSomethingWithLine(String line, Integer value) {
-					return value + Integer.valueOf(line);
-				}
-			};
-		return lineReadTemplate(filepath, sumCallback, 0);
-	}
 	
+	public Integer calcSum(String filepath) throws IOException{ 
+		LineCallback<Integer> sumCallback = new LineCallback<Integer>() { 
+			public Integer doSomethingWithLine(String line, Integer value) { 
+				return value + Integer.valueOf(line);
+			}
+		}; 
+		return lineReadTemplate(filepath, sumCallback, 0); 
+	}
+	 
 	public Integer calcMultiply(String filepath) throws IOException {
-		LineCallback multiplyCallback =
-			new LineCallback() {
-				public Integer doSomethingWithLine(String line, Integer value) {
-					return value * Integer.valueOf(line);
-				}
-			};
-		return lineReadTemplate(filepath, multiplyCallback, 1);
+		LineCallback<Integer> multiplyCallback = new LineCallback<Integer>() { 
+			public Integer doSomethingWithLine(String line, Integer value) { 
+				return value * Integer.valueOf(line); 
+			} 
+		}; 
+		return lineReadTemplate(filepath, multiplyCallback, 1); 
+	}
+	 
+	
+	public String concatenate(String filepath) throws IOException {
+		LineCallback<String> concatenateCallback = 
+				new LineCallback<String>() {
+					public String doSomethingWithLine(String line, String value) {
+						return value + line;
+					}
+				};
+		return lineReadTemplate(filepath, concatenateCallback, "");
 	}
 	
 	public Integer fileReadTemplate(String filepath, BufferedReaderCallback callback) throws IOException {
@@ -43,11 +53,11 @@ public class Calculator {
 		}
 	}
 	
-	public Integer lineReadTemplate(String filepath, LineCallback callback, int initVal) throws IOException {
+	public <T> T lineReadTemplate(String filepath, LineCallback<T> callback, T initVal) throws IOException {
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(filepath));
-			Integer res = initVal;
+			T res = initVal;
 			String line = null;
 			//파일의 각 라인을 루프를 돌면서 가져 오는 것도 템플릿이 담당한다.
 			while ((line = br.readLine()) != null) {
