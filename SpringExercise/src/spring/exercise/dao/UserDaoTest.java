@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -11,13 +12,11 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations="/test-applicationContext.xml")
-@DirtiesContext
 public class UserDaoTest {
 	@Autowired
 	ApplicationContext context;
@@ -102,7 +101,7 @@ public class UserDaoTest {
 		dao.add(user3);
 		assertThat(dao.getCount(), is(3));
 		
-		assertThat(dao.selectAll().size(), is(3));
+		assertThat(dao.getAll().size(), is(3));
 		
 	}
 	
@@ -118,5 +117,39 @@ public class UserDaoTest {
 		dao.remove(user1);
 		assertThat(dao.getCount(), is(0));
 		
+	}
+	
+	@Test
+	public void getAll() throws SQLException, ClassNotFoundException {
+		dao.deleteAll();
+		
+		dao.add(user1);
+		List<User> users1 = dao.getAll();
+		assertThat(users1.size(), is(1));
+		
+		dao.add(user2);
+		List<User> users2 = dao.getAll();
+		assertThat(users2.size(), is(2));
+		checkSameUser(user1, users2.get(0));
+		checkSameUser(user2, users2.get(1));
+		
+		dao.add(user3);
+		List<User> users3 = dao.getAll();
+		assertThat(users3.size(), is(3));
+		//user3의 id 값이 알파벳순으로 가장 빠르므로 getAll()의 첫 번째 엘리먼트여야 한다.
+		checkSameUser(user3, users3.get(0));
+		checkSameUser(user1, users3.get(1));
+		checkSameUser(user2, users3.get(2));
+		
+		dao.deleteAll();
+		List<User> users0 = dao.getAll();
+		assertThat(users0.size(), is(0));
+	}
+
+	//User 오브젝트의 내용을 비교하는 검증코드, 테스트에서 반복적으로 사용되므로 분리해놓았다.
+	public void checkSameUser(User user1, User user2) {
+		assertThat(user1.getId(), is(user2.getId()));
+		assertThat(user1.getName(), is(user2.getName()));
+		assertThat(user1.getPassword(), is(user2.getPassword()));
 	}
 }
